@@ -1,76 +1,62 @@
 <% layout("/layouts/boilerplate") %>
     <style>
-        #filter-wrapper {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        }
-        #filters{
-            display: flex;
-            flex-wrap: wrap;
-            overflow-x: auto;
-            scrollbar-width: thin;
-        }
-        #filters::-webkit-scrollbar {
-        height: 6px;
-        }
-        #filters::-webkit-scrollbar-track {
-        background: transparent;
-        }
-        #filters::-webkit-scrollbar-thumb {
-        background: #ddd;
-        border-radius: 10px;
-        align-items: center;
-        }
-        .filter{
-            text-align: center;
-            flex: 0 0 auto;
-            margin-right: 2rem;
-            margin-top: 2rem;
-            opacity: 0.85;
-            transition: all 0.3s ease;
-            
-        }
-        .filter:hover{
-            opacity:1;
-            cursor: pointer;
-            transform: translateY(-4px);
-        }
-        #filters::-webkit-scrollbar {
-        display: none;
-        }
+        /* Mobile Scrollable Filter Bar */
+@media (max-width: 768px) {
 
-        @media (max-width: 768px) {
-        .filter:nth-child(n+7) {    /* Hide from 7th filter onwards */
-            display: none;
-        }
-        }
-        @media (max-width: 768px) {
-        #filters::after {
-        content: "";                                    /* Creates a fake empty element */
-        position: absolute;                             /* Places it on top of the page */
-        right: 0;                                       /* Sticks it to the right edge */
-        top: 0; bottom: 0;                              /* Full height of the filter bar */
-        width: 60px;                                    /* Width of the fading area */
-        background: linear-gradient(to left, white 0%, transparent 100%);                                                /* ← Creates a smooth fade-to-transparent from right to left */
-        pointer-events: none;                           /* You can still scroll/swipe through it */
-        z-index: 1;                                     /* Puts it above the filters but below any modal */
+    #filter-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    #filters {
+        display: flex;
+        flex-wrap: nowrap;        /* <-- Important: items in one line */
+        overflow-x: auto;
+        gap: 1.2rem;
+        padding-bottom: 0.5rem;
+        position: relative;       /* <-- Needed for fade effect */
+    }
+
+    .filter {
+        flex: 0 0 auto;
+        margin: 0;                 /* Remove big margins */
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 70px;           /* Controls width of each item */
+    }
+
+    .filter i {
+        font-size: 26px;
+        margin-bottom: 3px;
+    }
+
+    .filter p {
+        font-size: 12px;
+        margin: 0;
+    }
+
+    /* Fade-out effect on right side */
+    #filters::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 40px;
+        background: linear-gradient(to left, white 60%, transparent);
+        pointer-events: none;
+    }
+
+    /* Tax toggle box full width */
+    .tax-toggle {
+        width: 100%;
+        justify-content: center;
     }
 }
-    .tax-info{
-        color: #717171;
-        display: none;
-    }
-    .tax-toggle{
-        margin-left: 1rem;
-        white-space: nowrap; 
-        padding: 0.8rem 1.2rem;
-        border: 1px solid #ddd;
-        border-radius: 1rem;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+
 
     </style>
     <!-- <h3 class="head">All Listings</h3> -->

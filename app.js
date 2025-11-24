@@ -93,6 +93,9 @@ app.use((req,res,next)=>{
 //     let registerUser = await User.register(fakeUser,"pass@123");
 //     res.send(registerUser);
 // });
+app.get("/", (req, res) => {
+    res.redirect("/listings");
+});
 
 app.use("/listings",listeningRouter);
 app.use("/listings/:id/reviews",reviewRouter);
