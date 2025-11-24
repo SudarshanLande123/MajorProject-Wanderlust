@@ -1,0 +1,94 @@
+<style>
+
+  .search-btn{
+    display: flex;            
+    align-items: center;      
+    background-color: red;
+    color:white;
+    border-radius:25px;
+  }
+  .search-btn:hover{
+    background-color:red;
+    color:black;
+  }
+  .search-btn i{
+    font-size: 1rem;
+    display: inline;
+    margin-right:0.5rem;
+  }
+  .search-input{
+    width: 220px;
+    height: 2.4rem;
+    border-radius: 25px;
+    padding: 0.45rem 1.2rem;
+    border: 1px solid #ccc;
+    transition: 0.3s ease;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  .search-input.active {
+    width: 200px;
+    opacity: 1;
+}
+
+#suggestions {
+  position: absolute;
+  top: 100%;
+  list-style: none;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  margin-top: 5rem;
+  width: 200px;
+  display: none;
+  z-index: 10000;
+  padding-left: 0;
+} 
+
+#suggestions li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+#suggestions li:hover {
+  background-color: #f5f5f5;
+}
+</style>
+
+
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/"><i class="fa-solid fa-compass"></i></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-link" aria-current="page" href="/">Explore</a>
+      </div>
+          <div class="navbar-nav ms-auto d-flex align-items-center">
+          <form class="d-flex align-items-center" role="search">
+          <input id="searchInput" class="form-control me-2 search-input" type="search" placeholder="Search destinations">
+          
+          <button id="searchBtn" class="btn search-btn" type="button">
+            <i class="fa-sharp fa-solid fa-magnifying-glass" style="color:black;"></i>
+          </button>
+        </form>
+
+        <ul id="suggestions"></ul>
+
+    </div>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/listings">All Listing</a>
+        <a class="nav-link" href="/listings/new">Create Listing</a> 
+        <% if(!currUser){ %>
+        <a class="nav-link" href="/users/signup"><b>Sign Up</b></a>
+        <a class="nav-link" href="/users/login"><b>Log in</b></a>
+        <% } %>
+        <% if(currUser) { %>
+        <a class="nav-link" href="/users/logout">Log Out</a>  
+        <% } %> 
+      </div>
+    </div>
+  </div>
+</nav>
