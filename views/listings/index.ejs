@@ -1,32 +1,41 @@
 <% layout("/layouts/boilerplate") %>
     <style>
-        /* Mobile Scrollable Filter Bar */
-@media (max-width: 768px) {
+        
+    #filter-wrapper {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 2rem;
+    }
 
+    #filters {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 1.2rem;
+        padding-bottom: 0.5rem;
+        position: relative;
+        width: 100%;       /* <-- Needed for fade effect */
+    }
+
+    .filter {
+        flex: 0 0 auto;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 70px;
+        margin: 0;           /* Controls width of each item */
+    }
+    @media (max-width: 768px) {
     #filter-wrapper {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-
-    #filters {
-        display: flex;
-        flex-wrap: nowrap;        /* <-- Important: items in one line */
-        overflow-x: auto;
-        gap: 1.2rem;
-        padding-bottom: 0.5rem;
-        position: relative;       /* <-- Needed for fade effect */
-    }
-
-    .filter {
-        flex: 0 0 auto;
-        margin: 0;                 /* Remove big margins */
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-width: 70px;           /* Controls width of each item */
-    }
+    /* #filters stays as flex-row with horizontal scroll */
+}
 
     .filter i {
         font-size: 26px;
@@ -55,7 +64,7 @@
         width: 100%;
         justify-content: center;
     }
-}
+
 
 
     </style>
