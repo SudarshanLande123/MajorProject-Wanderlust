@@ -1,18 +1,17 @@
 const Listing = require("../models/listing.js");
 const geocodeLocation = require("../utils/geocode");
 
-// INDEX
-module.exports.Index = async (req, res) => {
-    const allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
+
+module.exports.Index = async (req,res)=>{
+    let allListings = await Listing.find({});
+    res.render("listings/index.ejs",{allListings});
 };
 
-// NEW FORM
-module.exports.RenderNewForm = (req, res) => {
+module.exports.RenderNewForm = (req,res)=>{
     res.render("listings/new.ejs");
 };
 
-// CREATE LISTING
+
 module.exports.CreateListing = async (req, res, next) => {
     try {
         let newList = new Listing(req.body.listing);
@@ -26,77 +25,82 @@ module.exports.CreateListing = async (req, res, next) => {
             };
         }
 
-        // ✅ Geocoding using axios utility
-        const location = req.body.listing.location;
-        const coords = await geocodeLocation(location);
+        // Geocoding logic
+        const query = req.body.listing.location;
+        const geoURL = `https://nominatim.openstreetmap.org/search?format=json&q=${query}`;
 
-        newList.latitude = coords.lat;
-        newList.longitude = coords.lon;
+        const geoRes = await fetch(geoURL);
+        const geoData = await geoRes.json();
+
+        if (!geoData || !geoData.length) {
+            req.flash("error", "Location not found. Please enter a valid address.");
+            return res.redirect("/listings/new");
+        }
+
+        newList.latitude = parseFloat(geoData[0].lat);
+        newList.longitude = parseFloat(geoData[0].lon);
 
         await newList.save();
 
         req.flash("success", "New Listing Created!");
-        res.redirect(`/listings/${newList._id}`);
+        return res.redirect(`/listings/${newList._id}`);
 
-    } catch (err) {
-        console.error("Error creating listing:", err.message);
-        req.flash("error", "Invalid location. Please enter a valid address.");
-        res.redirect("/listings/new");
+    } catch (e) {
+        console.error("Error creating listing:", e);
+        return next(e);  // Important: Use next() so your global error handler catches it
     }
 };
 
-// SHOW LISTING
-module.exports.ShowListing = async (req, res) => {
-    const { id } = req.params;
 
-    const listing = await Listing.findById(id)
-        .populate({
-            path: "reviews",
-            populate: { path: "author" }
-        })
-        .populate("owner");
 
-    if (!listing) {
-        req.flash("error", "Listing not found!");
+module.exports.ShowListing = async(req,res)=>{
+    let {id} = req.params;
+    let listing = await Listing.findById(id).populate({path: "reviews",
+        populate: {
+            path:"author",
+        },
+    }).populate("owner");
+    if(!listing){
+        req.flash("error","Listing which you requested is not exist!");
         return res.redirect("/listings");
     }
-
-    res.render("listings/show.ejs", {
-        listing,
-        maptilerKey: process.env.MAPTILER_API_KEY
+    res.render("listings/show.ejs", { 
+        listing, 
+        maptilerKey: process.env.MAPTILER_API_KEY   // ← This line
     });
 };
 
-// EDIT FORM
-module.exports.EditListing = async (req, res) => {
-    const { id } = req.params;
-    const listing = await Listing.findById(id);
 
-    if (!listing) {
-        req.flash("error", "Listing not found!");
+
+module.exports.EditListing = async (req,res)=>{
+    let {id} = req.params;
+    let listing = await  Listing.findById(id);
+    if(!listing){
+        req.flash("error","Listing which you requested is not exist!");
         return res.redirect("/listings");
     }
 
-    const originalImageURL = listing.image.url;
-    const smallURL = originalImageURL.replace("/upload/", "/upload/w_250,c_fit/");
-
-    res.render("listings/edit.ejs", { listing, smallURL });
+    let OriginalImageURL = listing.image.url;
+    let smallURL = OriginalImageURL.replace("/upload/", "/upload/w_250,c_fit/");
+    res.render("listings/edit.ejs",{listing,smallURL});
 };
 
-// UPDATE LISTING
-module.exports.UpdateListing = async (req, res) => {
+module.exports.UpdateListing = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        let { id } = req.params;
 
-        const listing = await Listing.findById(id);
+        let listing = await Listing.findByIdAndUpdate(
+            id,
+            { ...req.body.listing },
+            { new: true } // important, return updated document
+        );
+
         if (!listing) {
-            req.flash("error", "Listing not found!");
+            req.flash("error", "Listing not found.");
             return res.redirect("/listings");
         }
 
-        Object.assign(listing, req.body.listing);
-
-        // Update image
+        // Update image if new one uploaded
         if (req.file) {
             listing.image = {
                 url: req.file.path,
@@ -104,41 +108,48 @@ module.exports.UpdateListing = async (req, res) => {
             };
         }
 
-        // Update location
-        if (req.body.listing.location) {
-            const { lat, lon } = await geocodeLocation(req.body.listing.location);
-            listing.latitude = lat;
-            listing.longitude = lon;
+        // Update location → geocode
+        if (req.body.listing.location && req.body.listing.location !== listing.location) {
+
+            const query = req.body.listing.location;
+            const geoURL = `https://nominatim.openstreetmap.org/search?format=json&q=${query}`;
+
+            const geoRes = await fetch(geoURL);
+            const geoData = await geoRes.json();
+
+            if (geoData.length > 0) {
+                listing.latitude = parseFloat(geoData[0].lat);
+                listing.longitude = parseFloat(geoData[0].lon);
+            }
         }
 
         await listing.save();
 
         req.flash("success", "Listing Updated Successfully!");
-        res.redirect(`/listings/${id}`);
+        return res.redirect(`/listings/${id}`);
 
-    } catch (err) {
-        console.error("Update error:", err.message);
-        req.flash("error", err.message);
-        res.redirect("/listings");
+    } catch (e) {
+        console.error("Error updating listing:", e);
+        return next(e); // Sends error to global handler
     }
 };
 
-// DELETE
-module.exports.DeleteListing = async (req, res) => {
-    const { id } = req.params;
-    await Listing.findByIdAndDelete(id);
-    req.flash("success", "Listing deleted successfully");
+
+module.exports.DeleteListing = async (req,res)=>{
+    let {id} = req.params;
+    let deletedListing = await Listing.findByIdAndDelete(id);
+    req.flash("success","Listing is Deleted Successfully");
     res.redirect("/listings");
 };
 
-// SEARCH
 module.exports.SearchListing = async (req, res) => {
-    const q = req.query.q;
-    if (!q) return res.json([]);
+  let q = req.query.q;
 
-    const listings = await Listing.find({
-        title: { $regex: q, $options: "i" }
-    }).limit(5);
+  if (!q) return res.json([]);
 
-    res.json(listings);
+  const listings = await Listing.find(
+    { title: { $regex: q, $options: "i" } } // case-insensitive
+  ).limit(5);
+
+  res.json(listings);
 };
