@@ -29,7 +29,7 @@ This project was built as part of my learning journey in full-stack web developm
 ### Database
 - MongoDB Atlas (Cloud Database)
 
-### Tools
+### Tools 
 - Git & GitHub  
 - VS Code  
 
