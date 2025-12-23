@@ -15,7 +15,7 @@ module.exports.RenderNewForm = (req, res) => {
 // CREATE LISTING
 module.exports.CreateListing = async (req, res, next) => {
     try {
-        const newList = new Listing(req.body.listing);
+        let newList = new Listing(req.body.listing);
         newList.owner = req.user._id;
 
         // Image
@@ -26,10 +26,12 @@ module.exports.CreateListing = async (req, res, next) => {
             };
         }
 
-        // ✅ Geocoding (FIXED)
-        const { lat, lon } = await geocodeLocation(req.body.listing.location);
-        newList.latitude = lat;
-        newList.longitude = lon;
+        // ✅ Geocoding using axios utility
+        const location = req.body.listing.location;
+        const coords = await geocodeLocation(location);
+
+        newList.latitude = coords.lat;
+        newList.longitude = coords.lon;
 
         await newList.save();
 
@@ -37,8 +39,8 @@ module.exports.CreateListing = async (req, res, next) => {
         res.redirect(`/listings/${newList._id}`);
 
     } catch (err) {
-        console.error("Create listing error:", err.message);
-        req.flash("error", err.message);
+        console.error("Error creating listing:", err.message);
+        req.flash("error", "Invalid location. Please enter a valid address.");
         res.redirect("/listings/new");
     }
 };
