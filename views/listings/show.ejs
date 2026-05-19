@@ -98,6 +98,131 @@
         </div>
     </div>
     <% } %>
+    
+
+<!-- Book This Place -->
+<div class="mb-5">
+    <h5 class="fw-bold mb-3">Book This Place</h5>
+    <div class="booking-card rounded-4 p-4">
+
+        <!-- Price Header -->
+        <div class="d-flex align-items-baseline gap-1 mb-4">
+            <span class="fw-bold fs-4" style="color:#fe424d;">&#8377;<span id="b-price-per-night"><%= listing.price.toLocaleString("en-IN") %></span></span>
+            <span class="text-muted">/night</span>
+        </div>
+
+        <!-- Form Fields -->
+        <div class="mb-3">
+            <label class="form-label" for="b-name">Your Name</label>
+            <input type="text" id="b-name" class="form-control" placeholder="Enter your full name" oninput="calcBookingPrice()" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="b-days">Number of Days</label>
+            <input type="number" id="b-days" class="form-control" placeholder="e.g. 3" min="1" max="365" oninput="calcBookingPrice()" />
+        </div>
+
+        <!-- Price Breakdown (hidden until filled) -->
+        <div id="b-breakdown" class="booking-breakdown rounded-3 p-3 mb-3" style="display:none;">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>&#8377;<span id="b-rate"><%= listing.price.toLocaleString("en-IN") %></span> × <span id="b-days-display">0</span> nights</span>
+                <span>&#8377;<span id="b-subtotal">0</span></span>
+            </div>
+            <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>Service fee (5%)</span>
+                <span>&#8377;<span id="b-fee">0</span></span>
+            </div>
+            <hr class="my-2">
+            <div class="d-flex justify-content-between fw-bold">
+                <span>Total</span>
+                <span style="color:#fe424d;">&#8377;<span id="b-total">0</span></span>
+            </div>
+        </div>
+
+        <!-- Book Button -->
+        <button id="b-btn" class="btn w-100 book-btn rounded-3 py-2 fw-bold" onclick="confirmBooking()" disabled>
+            <i class="fa-solid fa-calendar-check me-2" style="color:#fff; font-size:1rem;"></i>Book Now
+        </button>
+
+    </div>
+</div>
+
+
+<!-- ✅ SUCCESS POPUP MODAL — Paste this ANYWHERE inside the <div class="container"> but after the booking card above -->
+<div id="booking-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; align-items:center; justify-content:center;">
+    <div class="booking-success-modal rounded-4 p-5 text-center">
+        <!-- Animated checkmark -->
+        <div class="check-circle mb-3">
+            <i class="fa-solid fa-check" style="color:#fff; font-size:1.8rem;"></i>
+        </div>
+        <h4 class="fw-bold mb-1">Hotel Booked Successfully!</h4>
+        <p class="text-muted small mb-1" id="b-confirm-name"></p>
+        <p class="text-muted small mb-3" id="b-confirm-details"></p>
+        <div class="booking-total-pill mb-4" id="b-confirm-total"></div>
+        <button class="btn btn-dark rounded-3 px-5 py-2 fw-bold" onclick="closeBookingModal()">Done</button>
+    </div>
+</div>
+
+
+<%# ✅ PASTE THIS <script> block just BEFORE </div> at the very end of the container --%>
+<script>
+    const rawPrice = <%= listing.price %>;
+
+    function fmtINR(n) {
+        return Math.round(n).toLocaleString("en-IN");
+    }
+
+    function calcBookingPrice() {
+        const days  = parseInt(document.getElementById("b-days").value) || 0;
+        const name  = document.getElementById("b-name").value.trim();
+        const breakdown = document.getElementById("b-breakdown");
+        const btn = document.getElementById("b-btn");
+
+        if (days > 0 && name.length > 0) {
+            const subtotal = rawPrice * days;
+            const fee      = Math.round(subtotal * 0.05);
+            const total    = subtotal + fee;
+
+            document.getElementById("b-days-display").textContent = days;
+            document.getElementById("b-subtotal").textContent     = fmtINR(subtotal);
+            document.getElementById("b-fee").textContent          = fmtINR(fee);
+            document.getElementById("b-total").textContent        = fmtINR(total);
+
+            breakdown.style.display = "block";
+            btn.disabled = false;
+        } else {
+            breakdown.style.display = "none";
+            btn.disabled = true;
+        }
+    }
+
+    function confirmBooking() {
+        const name  = document.getElementById("b-name").value.trim();
+        const days  = parseInt(document.getElementById("b-days").value) || 0;
+        const subtotal = rawPrice * days;
+        const fee      = Math.round(subtotal * 0.05);
+        const total    = subtotal + fee;
+
+        document.getElementById("b-confirm-name").textContent    = `Booked by: ${name}`;
+        document.getElementById("b-confirm-details").textContent = `${days} night${days > 1 ? "s" : ""} at ₹${fmtINR(rawPrice)}/night`;
+        document.getElementById("b-confirm-total").textContent   = `Total Paid: ₹${fmtINR(total)}`;
+
+        const overlay = document.getElementById("booking-overlay");
+        overlay.style.display = "flex";
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeBookingModal() {
+        document.getElementById("booking-overlay").style.display = "none";
+        document.body.style.overflow = "";
+        // Reset form
+        document.getElementById("b-name").value  = "";
+        document.getElementById("b-days").value  = "";
+        document.getElementById("b-breakdown").style.display = "none";
+        document.getElementById("b-btn").disabled = true;
+    }
+</script>
+
 
     <!-- Map -->
     <div class="mb-5">
