@@ -21,25 +21,18 @@ module.exports.CreateListing = async (req, res, next) => {
         filename: req.file.filename,
       };
     }
+const query = req.body.listing.location;
+const geoURL = `http://api.positionstack.com/v1/forward?access_key=${process.env.POSITIONSTACK_API_KEY}&query=${encodeURIComponent(query)}`;
+const geoRes = await fetch(geoURL);
+const geoData = await geoRes.json();
 
-    // Geocoding logic
-    const query = req.body.listing.location;
-    const geoURL = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-    const geoRes = await fetch(geoURL, {
-      headers: {
-        "User-Agent": "WanderlustApp/1.0 (landesudarshan51@gmail.com)",
-      },
-    });
+if (!geoData || !geoData.data || geoData.data.length === 0) {
+    req.flash("error", "Location not found. Please enter a valid address.");
+    return res.redirect("/listings/new");
+}
 
-    const geoData = await geoRes.json(); // ✅ FIX 1: was missing, geoData was undefined
-
-    if (!geoData || !geoData.length) {
-      req.flash("error", "Location not found. Please enter a valid address.");
-      return res.redirect("/listings/new");
-    }
-
-    newList.latitude = parseFloat(geoData[0].lat);
-    newList.longitude = parseFloat(geoData[0].lon);
+newList.latitude = geoData.data[0].latitude;
+newList.longitude = geoData.data[0].longitude;
 
     await newList.save();
 
@@ -120,6 +113,12 @@ module.exports.UpdateListing = async (req, res, next) => {
           "User-Agent": "WanderlustApp/1.0 (landesudarshan51@gmail.com)", // ✅ FIX 2: was missing User-Agent
         },
       });
+
+      const contentType = geoRes.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+    req.flash("error", "Location service unavailable. Please try again.");
+    return res.redirect("/listings/new");
+}
       const geoData = await geoRes.json();
 
       if (geoData.length > 0) {
