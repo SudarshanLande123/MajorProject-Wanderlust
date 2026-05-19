@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
-const {isLoggedIn, isOwner,validateListing,checkSearch} = require("../middleware.js");
-const { authorize } = require("passport");
+const { isLoggedIn, isOwner, validateListing, checkSearch } = require("../middleware.js");
+// ✅ No passport import needed here
 const { Index, RenderNewForm, ShowListing, CreateListing, EditListing, UpdateListing, DeleteListing, SearchListing } = require("../controllers/listings.js");
-const multer  = require('multer');
-const {storage} = require("../cloudConfig.js");
+const multer = require('multer');
+const { storage } = require("../cloudConfig.js");
 const upload = multer({ storage });
 
 

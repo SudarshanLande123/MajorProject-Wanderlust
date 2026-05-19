@@ -1,93 +1,232 @@
 <style>
+  /* ===== SEARCH ===== */
+  .search-wrapper {
+    position: relative;
+  }
 
-  .search-btn{
-    display: flex;            
-    align-items: center;      
-    background-color: red;
-    color:white;
-    border-radius:25px;
-  }
-  .search-btn:hover{
-    background-color:red;
-    color:black;
-  }
-  .search-btn i{
-    font-size: 1rem;
-    display: inline;
-    margin-right:0.5rem;
-  }
-  .search-input{
-    width: 220px;
+  .search-input {
     height: 2.4rem;
     border-radius: 25px;
     padding: 0.45rem 1.2rem;
-    border: 1px solid #ccc;
-    transition: 0.3s ease;
-    opacity: 1 !important;
-    visibility: visible !important;
+    border: 1.5px solid #ddd;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-size: 0.9rem;
+    width: 220px;
   }
-  .search-input.active {
-    width: 200px;
-    opacity: 1;
-}
 
-#suggestions {
-  position: absolute;
-  top: 100%;
-  list-style: none;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  margin-top: 5rem;
-  width: 200px;
-  display: none;
-  z-index: 10000;
-  padding-left: 0;
-} 
+  .search-input:focus {
+    border-color: #fe424d;
+    box-shadow: 0 0 0 3px rgba(254, 66, 77, 0.1);
+    outline: none;
+  }
 
-#suggestions li {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
+  .search-btn {
+    display: flex;
+    align-items: center;
+    background-color: #fe424d;
+    color: white;
+    border-radius: 25px;
+    border: none;
+    padding: 0.45rem 0.9rem;
+    transition: background 0.2s;
+  }
 
-#suggestions li:hover {
-  background-color: #f5f5f5;
-}
+  .search-btn:hover {
+    background-color: #d93540;
+    color: white;
+  }
+
+  .search-btn i {
+    font-size: 0.95rem;
+    color: white !important;
+  }
+
+  /* Suggestions dropdown — anchored to search wrapper */
+  #suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    list-style: none;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    width: 100%;
+    min-width: 220px;
+    display: none;
+    z-index: 99999;
+    padding: 0.3rem 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    margin: 0;
+  }
+
+  #suggestions li {
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    border-bottom: 1px solid #f3f3f3;
+  }
+
+  #suggestions li:last-child {
+    border-bottom: none;
+  }
+
+  #suggestions li:hover {
+    background-color: #fff5f5;
+    color: #fe424d;
+  }
+
+  /* ===== MOBILE: search bar always visible at top ===== */
+  @media (max-width: 767px) {
+    .navbar-top-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 0.5rem;
+    }
+
+    .mobile-search-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .mobile-search-bar .search-input {
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Hide search from collapse menu on mobile */
+    .desktop-search {
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    /* Hide mobile search on desktop */
+    .mobile-search-bar {
+      display: none !important;
+    }
+
+    .navbar-top-row {
+      display: contents;
+    }
+  }
 </style>
-
 
 <nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/listings"><i class="fa-solid fa-compass"></i></a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-link" aria-current="page" href="/listings">Explore</a>
+
+    <!-- Brand + Mobile Search + Toggler all in one row on mobile -->
+    <div class="navbar-top-row">
+      <a class="navbar-brand me-2" href="/listings">
+        <i class="fa-solid fa-compass"></i>
+      </a>
+
+      <!-- Search bar visible always on mobile, in the top bar -->
+      <div class="mobile-search-bar search-wrapper">
+        <input id="searchInputMobile" class="form-control search-input" type="search" placeholder="Search destinations">
+        <button class="btn search-btn" type="button" onclick="triggerSearch('mobile')">
+          <i class="fa-sharp fa-solid fa-magnifying-glass"></i>
+        </button>
+        <ul id="suggestionsMobile"></ul>
       </div>
-          <div class="navbar-nav ms-auto d-flex align-items-center">
-          <form class="d-flex align-items-center" role="search">
-          <input id="searchInput" class="form-control me-2 search-input" type="search" placeholder="Search destinations">
-          
-          <button id="searchBtn" class="btn search-btn" type="button">
-            <i class="fa-sharp fa-solid fa-magnifying-glass" style="color:black;"></i>
-          </button>
-        </form>
 
-        <ul id="suggestions"></ul>
-
+      <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
     </div>
+
+    <!-- Collapsible menu -->
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+
+      <!-- Explore link -->
+      <div class="navbar-nav">
+        <a class="nav-link" href="/listings">Explore</a>
+      </div>
+
+      <!-- Desktop search bar (hidden on mobile) -->
+      <div class="navbar-nav mx-auto desktop-search">
+        <div class="d-flex align-items-center search-wrapper">
+          <input id="searchInputDesktop" class="form-control me-2 search-input" type="search" placeholder="Search destinations">
+          <button class="btn search-btn" type="button" onclick="triggerSearch('desktop')">
+            <i class="fa-sharp fa-solid fa-magnifying-glass"></i>
+          </button>
+          <ul id="suggestionsDesktop"></ul>
+        </div>
+      </div>
+
+      <!-- Right side nav links -->
       <div class="navbar-nav ms-auto">
-        <a class="nav-link" href="/listings/new">Create Listing</a> 
+        <a class="nav-link" href="/listings/new">Create Listing</a>
         <% if(!currUser){ %>
         <a class="nav-link" href="/users/signup"><b>Sign Up</b></a>
         <a class="nav-link" href="/users/login"><b>Log in</b></a>
         <% } %>
         <% if(currUser) { %>
-        <a class="nav-link" href="/users/logout">Log Out</a>  
-        <% } %> 
+        <a class="nav-link" href="/users/logout">Log Out</a>
+        <% } %>
       </div>
+
     </div>
   </div>
 </nav>
+
+<script>
+  // Generic search handler for both mobile and desktop inputs
+  function setupSearch(inputId, suggestionsId) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(suggestionsId);
+
+    if (!input || !list) return;
+
+    input.addEventListener("input", async () => {
+      const q = input.value.trim();
+      list.innerHTML = "";
+
+      if (!q) {
+        list.style.display = "none";
+        return;
+      }
+
+      try {
+        const res = await fetch(`/listings/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        if (data.length === 0) {
+          list.style.display = "none";
+          return;
+        }
+
+        data.forEach(listing => {
+          const li = document.createElement("li");
+          li.textContent = listing.title;
+          li.addEventListener("click", () => {
+            window.location.href = `/listings/${listing._id}`;
+          });
+          list.appendChild(li);
+        });
+
+        list.style.display = "block";
+      } catch (err) {
+        list.style.display = "none";
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!input.contains(e.target) && !list.contains(e.target)) {
+        list.style.display = "none";
+      }
+    });
+  }
+
+  function triggerSearch(type) {
+    const inputId = type === 'mobile' ? 'searchInputMobile' : 'searchInputDesktop';
+    const q = document.getElementById(inputId).value.trim();
+    if (q) window.location.href = `/listings?search=${encodeURIComponent(q)}`;
+  }
+
+  setupSearch("searchInputMobile", "suggestionsMobile");
+  setupSearch("searchInputDesktop", "suggestionsDesktop");
+</script>
